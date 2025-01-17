@@ -1,3 +1,4 @@
+importScripts("jszip.min.js");
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     if (message.action === "startDownload") {
       const baseURL = message.url;
