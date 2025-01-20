@@ -9,11 +9,22 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       await downloadRecursive(baseURL, zip, "");
       const content = await zip.generateAsync({ type: "blob" });
 
-      // Send the ZIP blob to the popup
-      chrome.runtime.sendMessage({ action: "downloadZip", blob: content });
+      // Convert blob to array buffer for transfer
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(content);
+      reader.onloadend = function() {
+        // Send array buffer instead of blob
+        chrome.runtime.sendMessage({ 
+          action: "downloadZip", 
+          data: reader.result
+        });
+      };
     } catch (error) {
       console.error("Error downloading files:", error);
-      chrome.runtime.sendMessage({ action: "error", message: "An error occurred while downloading files." });
+      chrome.runtime.sendMessage({ 
+        action: "error", 
+        message: "An error occurred while downloading files." 
+      });
     }
   }
 });
