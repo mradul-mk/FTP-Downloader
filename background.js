@@ -8,17 +8,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       const zip = new JSZip(); // Create a new ZIP instance
       await downloadRecursive(baseURL, zip, "");
       const content = await zip.generateAsync({ type: "blob" });
-
-      // Convert blob to array buffer for transfer
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(content);
-      reader.onloadend = function() {
-        // Send array buffer instead of blob
-        chrome.runtime.sendMessage({ 
-          action: "downloadZip", 
-          data: reader.result
-        });
-      };
+      sendBlobToApp(content);
     } catch (error) {
       console.error("Error downloading files:", error);
       chrome.runtime.sendMessage({ 
@@ -28,6 +18,63 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     }
   }
 });
+
+function sendBlobToApp(blob){
+  /**
+   * Read the blob in chunks and send to app
+   * Keep chuck size small to prevent app from crashing 
+   * 1KB chunks
+   */
+  var CHUNK_SIZE = 256*1024;
+  var start = 0;
+  var stop = CHUNK_SIZE;
+
+  var remainder = blob.size % CHUNK_SIZE;
+  var chunks = Math.floor(blob.size / CHUNK_SIZE);
+  var chunkIndex = 0;
+
+  if(remainder!=0) chunks = chunks + 1;
+
+  var fr = new FileReader();
+  fr.onload = function () {
+    var message = {
+      "blobAsText": fr.result,
+      "mimeString": "application/octet-stream",
+      "chunks": chunks
+    };
+
+    chrome.runtime.sendMessage({
+      action: "downloadZip",
+      data: message
+    });
+    // read the next chunk of bytes
+    processChunk();
+  };
+  fr.onerror = function(){
+    console.log("An error occurred while reading");
+  };
+  processChunk();
+
+  function processChunk(){
+    chunkIndex++;
+    // exit if no more chunks
+    if(chunkIndex>chunks){
+      return;
+    }
+
+    if(chunkIndex == chunks && remainder!=0){
+      stop = start+remainder;
+    }
+
+    var blobChunk = blob.slice(start, stop);
+
+    // prepare next chunk
+    start = stop;
+    stop = stop + CHUNK_SIZE;
+
+    fr.readAsBinaryString(blobChunk);
+  }
+}
 
 // Recursively fetch directory listings and download files
 async function downloadRecursive(url, zip, folderPath) {

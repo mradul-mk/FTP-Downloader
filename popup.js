@@ -1,22 +1,50 @@
-chrome.runtime.onMessage.addListener((message) => {
-    if (message.action === "downloadZip") {
-      // Convert array buffer back to blob
-      const blob = new Blob([message.data], { type: 'application/zip' });
-      const blobURL = URL.createObjectURL(blob);
-  
-      // Trigger the download
-      const a = document.createElement("a");
-      a.href = blobURL;
-      a.download = "ftp_download.zip";
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobURL);
-    } else if (message.action === "error") {
-      alert(message.message);
+var _chunkIndex = 0;
+var _blobs = [];
+
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    if (request.action === "downloadZip") {
+      // new chunk received
+      _chunkIndex++;
+
+      var bytes = new Uint8Array(request.data.blobAsText.length);
+      for(var i=0; i<bytes.length; i++){
+        bytes[i] = request.data.blobAsText.charCodeAt(i);
+      }
+      // store blob
+      _blobs.push(new Blob([bytes], {type: request.data.mimeString}));
+
+      if(_chunkIndex == request.data.chunks) {
+        // merge all chunks
+        for(j=0; j<_blobs.length;j++) {
+          var mergedBlob;
+          if(j>0){
+            mergedBlob = new Blob([mergedBlob, _blobs[j]], {type: request.data.mimeString});
+          }
+          else{
+            mergedBlob = new Blob([_blobs[j]], {type: request.data.mimeString});
+          }
+        }
+
+        saveBlobToFile(mergedBlob, "files.zip", request.data.mimeString);
+      }
     }
   });
+
+
+  function saveBlobToFile(mergedBlob, fileName){
+    const blob = new Blob([mergedBlob], { type: 'application/zip' });
+    const blobURL = URL.createObjectURL(blob);
+
+    // trigger download
+    const a = document.createElement("a");
+    a.href = blobURL;
+    a.download = fileName;
+    a.style.display = "none";
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobURL);
+  }
   
   document.getElementById("download").addEventListener("click", async () => {
     try{
