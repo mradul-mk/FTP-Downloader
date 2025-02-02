@@ -7,6 +7,9 @@ chrome.runtime.onMessage.addListener(
       // new chunk received
       _chunkIndex++;
 
+      const progressbar = document.getElementById("progress-bar")
+      progressbar.style.width = String((_chunkIndex/request.data.chunks)*100) + '%'
+
       var bytes = new Uint8Array(request.data.blobAsText.length);
       for(var i=0; i<bytes.length; i++){
         bytes[i] = request.data.blobAsText.charCodeAt(i);
@@ -50,7 +53,9 @@ chrome.runtime.onMessage.addListener(
     try{
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab?.url?.startsWith("ftp://")) {
-        chrome.runtime.sendMessage({ action: "startDownload", url: tab.url });
+          document.getElementById("progress-container").style.display = "block";
+          document.getElementById("progress-bar").style.width = "0%";
+          chrome.runtime.sendMessage({ action: "startDownload", url: tab.url });
         } else {
         alert("Please navigate to an FTP directory to use this extension.");
         }

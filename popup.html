@@ -1,15 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>FTP Downloader</title>
+  <title>Hyper Fetch</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    button { padding: 10px 15px; font-size: 16px; cursor: pointer; }
+    body {
+      width: 200px; /* Adjust size */
+      height: 200px;
+      font-family: Arial, sans-serif;
+      margin: 5px; 
+      background-image: url("icons/background.png");
+      background-size: cover;
+      background-position: center;
+      text-align: center;
+      color: white; /* Ensure text is visible */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3); /* Dark overlay for readability */
+      z-index: -1;
+    }
+
+    button {
+      padding: 10px;
+      background-color: rgba(23, 1, 195, 0.7);
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: rgba(0, 0, 0, 0.9);
+    }
   </style>
 </head>
 <body>
-  <h2>FTP Downloader</h2>
-  <button id="download">Download All</button>
+  <h1>Fetch Files</h1>
+  <div>
+    <button id="download">Download All</button>
+    <div id="progress-container" style="display: none; width: 100%; background-color: #ddd; margin-top: 10px;">
+      <div id="progress-bar" style="width: 0%; height: 20px; background-color: #4caf50;"></div>
+    </div>
+  </div>
+  
   <script src="popup.js"></script>
 </body>
 </html>

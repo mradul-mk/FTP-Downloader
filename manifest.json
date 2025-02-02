@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
-    "name": "FTP Downloader",
-    "version": "1.0",
+    "name": "Hyper Fetch",
+    "version": "1.2",
     "description": "Download all files and folders recursively from an FTP server.",
     "permissions": ["downloads", "scripting", "activeTab"],
     "background": {
